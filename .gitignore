@@ -1,0 +1,32 @@
+# Java build artifacts
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE files
+*.iml
+.idea/
+.vscode/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Logs and runtime files
+logs/
+*.log
+
+# Data and persistent files
+data/
+docs/
+*.aof
+*.db
+
+# Credential and sensitive config files
+credential.txt
+
+# Temporary files
+*.tmp
+*.swp
