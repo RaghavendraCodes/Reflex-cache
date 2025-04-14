@@ -34,7 +34,7 @@ reflex-cache is an in-memory key-value store designed for fast access, uses flex
 
 | Command                          | Description                                                    |
 |----------------------------------|----------------------------------------------------------------|
-| `CREATE <cachebase>`            | Creates a new cachebase under the current client.              |
+| `CREATE cachebase<cachebase>`    | Creates a new cachebase under the current client.              |
 | `USE <cachebase>`               | Activates a specific cachebase for interactive commands.       |
 | `EXITDB`                        | Exits the current active cachebase context.                    |
 | `LISTDB`                        | Lists all cachebases available to the current client.          |
