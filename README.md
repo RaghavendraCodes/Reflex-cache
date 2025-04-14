@@ -94,3 +94,29 @@ Performing 20 random GETs... Time taken for GETs: 24 ms
 
 ---
 
+## Frequently Asked Questions (FAQ)
+
+### Q: Is it as fast as Redis?
+**A:** ReflexCache is designed with the same core insight as Redis — that eliminating overhead often beats multi-threading. It uses a single dispatcher for request handling and partitioned worker threads that each own a segment of keys. This allows us to parallelize safely without locks or synchronization, which keeps performance high and predictable. While Redis is incredibly optimized in C, ReflexCache proves that the same design philosophy can be brought into Java with strong performance results — especially for use cases where in-memory field querying adds value.
+
+### Q: Why did you choose this architecture?
+**A:** I was fascinated by Redis’s design: it's single-threaded, yet outperforms many multi-threaded systems. That made me realize — performance isn’t always about raw concurrency, but about minimizing contention and designing for CPU caches and predictable behavior. I took inspiration from that and added my own twist: partitioned multi-threaded workers that own their data exclusively. This gave me a sweet spot: high parallelism for reads/writes, while retaining a simple, elegant, and lock-free core.
+
+### Q: What was the motivation behind building ReflexCache?
+**A:** I wanted to learn by building — not just using — a database. ReflexCache was my way of deeply understanding what makes in-memory stores like Redis work so well. But I didn’t just want to reimplement Redis — I wanted to explore improvements and extensions, like lightweight field-level querying in JSON values, and a multithreaded architecture that remains deterministic and efficient. It was both a challenge and an experiment in thoughtful design.
+
+### Q: What trade-offs did you consider?
+**A:** I avoided aggressive multi-threading to keep things simple and safe. Instead, I used key-partitioned worker threads to get parallelism without introducing locking complexity. 
+---
+
+## ReflexCache Project Overview
+
+**ReflexCache** is a high-performance, Redis-inspired in-memory key-value store that I designed and built from scratch in Java.
+
+I was fascinated by Redis's core idea — that simplicity often beats complexity, and that even a single-threaded system can outperform multi-threaded ones if the design is tight. But I also wanted to experiment with parallelism without compromising determinism, so I came up with a hybrid model.
+
+ReflexCache uses a single-threaded dispatcher to receive commands — just like Redis — but instead of processing them serially, it routes them to partitioned worker threads, each of which exclusively owns a subset of the keyspace. This gives me lock-free parallelism, great CPU cache locality, and scalability across cores.
+
+Internally, ReflexCache supports logical multi-tenant databases (called *cachebases*), and each one can have its own dispatcher and set of worker threads. I'm also working on lightweight replication and failover, similar to Redis Sentinel — but tailored for a single-process design using dedicated threads.
+
+It was a fun but intense project that taught me a lot about system design, memory management, and the power of thoughtful trade-offs.
