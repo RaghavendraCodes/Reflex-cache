@@ -1,4 +1,4 @@
-![reflex-logo](https://raw.githubusercontent.com/RaghavendraCodes/portfolio-blogs/main/reflex.png)
+![reflex-logo](reflex.png)
 
 # ReflexCache 
 
