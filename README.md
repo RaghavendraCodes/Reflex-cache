@@ -5,7 +5,7 @@
 
 # ReflexCache 
 
-reflex-cache is an in-memory key-value store designed for fast access, uses flexible data structures and persistance of data via log files and aof files with a CLI interaction.
+ReflexCache is a fast, in-memory key-value store built for per-client isolation, and persistent logging. It uses a multi-cachebase architecture with the Cachebase Threading Model (CTM) to enable parallel, thread-safe operations per cachebase. Designed with simplicity and speed in mind.
 
 ## Features
 
