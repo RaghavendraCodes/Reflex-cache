@@ -54,7 +54,7 @@ reflex-cache is an in-memory key-value store designed for fast access, uses flex
 
 ## Architecture
 
-### Per-Cachebase Threading Model
+### Cachebase Threading Model (CTM)
 
 Each cachebase operates with:
 
