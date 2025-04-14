@@ -107,6 +107,7 @@ Performing 20 random GETs... Time taken for GETs: 24 ms
 
 ### Q: What trade-offs did you consider?
 **A:** I avoided aggressive multi-threading to keep things simple and safe. Instead, I used key-partitioned worker threads to get parallelism without introducing locking complexity. 
+
 ---
 
 ## ReflexCache Project Overview
