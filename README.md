@@ -1,4 +1,3 @@
-![reflex-logo](reflex.png)
 
 <div align="center">
   <img src="reflex.png">
