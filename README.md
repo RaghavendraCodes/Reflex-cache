@@ -87,6 +87,18 @@ Performing 20 random GETs... Time taken for GETs: 24 ms
 
 ---
 
+## Tech Stack
+
+- **Language**: Java 23
+- **Build Tool**: Maven
+- **Networking**: Java Sockets (custom TCP server)
+- **Concurrency**: Java Threads, Executors
+- **Persistence**: Custom Append-Only File (AOF) and recovery system
+- **Logging**: File-based per-client command logs
+- **Testing & Benchmarking**: Custom parallel benchmarking tool using Java multithreading
+
+---
+
 ## 📌 Coming Soon
 
 - TTL (Time To Live) support
