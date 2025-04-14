@@ -1,0 +1,90 @@
+Redis-inspired core with your own twist:
+    Single-threaded dispatcher = simplicity + determinism (like Redis).
+    Multi-threaded workers with ownership = parallelism without locks.
+    Field-level JSON querying in-memory = adds uniqueness.
+
+Partitioned design:
+    Efficient routing by key → great scalability.
+    Isolated worker threads → zero contention.
+    Field querying without going full MongoDB = balanced complexity.
+
+Clean design philosophy:
+    "Solve the right problems, and do it with minimum complexity" — exactly what Redis does.
+    I'm not copying Redis blindly. I'm learning from it and making something uniquely yours.
+
+
+Q: "Is it as fast as Redis?"
+A: ReflexCache is designed with the same core insight as Redis — that eliminating overhead often beats multi-threading. It uses a single dispatcher for request handling and partitioned worker threads that each own a segment of keys. This allows us to parallelize safely without locks or synchronization, which keeps performance high and predictable. While Redis is incredibly optimized in C, ReflexCache proves that the same design philosophy can be brought into Java with strong performance results — especially for use cases where in-memory field querying adds value.
+
+Q: "Why did you choose this architecture?"
+A: I was fascinated by Redis’s design: it's single-threaded, yet outperforms many multi-threaded systems. That made me realize — performance isn’t always about raw concurrency, but about minimizing contention and designing for CPU caches and predictable behavior. I took inspiration from that and added my own twist: partitioned multi-threaded workers that own their data exclusively. This gave me a sweet spot: high parallelism for reads/writes, while retaining a simple, elegant, and lock-free core.
+
+Q: "What was the motivation behind building ReflexCache?"
+A: I wanted to learn by building — not just using — a database. ReflexCache was my way of deeply understanding what makes in-memory stores like Redis work so well. But I didn’t just want to reimplement Redis — I wanted to explore improvements and extensions, like lightweight field-level querying in JSON values, and a multithreaded architecture that remains deterministic and efficient. It was both a challenge and an experiment in thoughtful design.
+
+Q: "What trade-offs did you consider?"
+A: I avoided aggressive multi-threading to keep things simple and safe. Instead, I used key-partitioned worker threads to get parallelism without introducing locking complexity. For field queries, I didn’t go the MongoDB route because that would’ve added too much overhead and complexity — I limited the depth intentionally to keep the system fast and focused.
+
+
+
+Tell me about this project (Your full pitch):
+Sure! ReflexCache is a high-performance, Redis-inspired in-memory key-value store that I designed and built from scratch in Java.
+
+I was fascinated by Redis's core idea — that simplicity often beats complexity, and that even a single-threaded system can outperform multi-threaded ones if the design is tight. But I also wanted to experiment with parallelism without compromising determinism, so I came up with a hybrid model.
+
+ReflexCache uses a single-threaded dispatcher to receive commands — just like Redis — but instead of processing them serially, it routes them to partitioned worker threads, each of which exclusively owns a subset of the keyspace. This gives me lock-free parallelism, great CPU cache locality, and scalability across cores.
+
+I also added field-level querying inside JSON values, which allows lightweight filtering on nested data — like GET FROM users WHERE gender = "female" — something Redis doesn't natively support.
+
+Internally, ReflexCache supports logical multi-tenant databases (cachebases), and each one can have its own dispatcher and set of worker threads. I'm also working on lightweight replication and failover, similar to Redis Sentinel — but tailored for a single-process design using dedicated threads.
+
+It was a fun but intense project that taught me a lot about system design, memory management, and the power of thoughtful trade-offs.
+
+Common Interview Questions + Strong Answers
+Why did you build ReflexCache?
+    I wanted to learn how Redis works under the hood — but rather than clone it, I wanted to reimagine it. Redis is simple but powerful, and I wanted to see if I could build something with the same elegance, but with controlled multithreading and support for querying.
+
+Why not just use Redis? What makes ReflexCache different?
+    ReflexCache isn't trying to replace Redis — it's an experiment in exploring ideas Redis doesn't focus on. For example:
+    Controlled multithreading with partitioned ownership.
+    Field-level JSON querying for flexible data access.
+    Everything is built in Java to explore GC, thread models, and portability.
+
+How does ReflexCache process read and write operations?
+    The client sends a command to a single-threaded dispatcher, which:
+    Parses and routes the request to the correct worker thread based on key hash.
+    The worker owns that key range and performs the read/write without locks.
+    Replies are sent back via the dispatcher or directly from the worker depending on config.
+
+How is field-level querying handled?
+Each worker stores keys with JSON values. When a query involves filtering, the worker:
+
+Scans only the keys it owns.
+
+Performs minimal parsing (e.g., Map-based filter checks) to match fields. This avoids a global scan and keeps it light — not as powerful as MongoDB, but fast and enough for most filtering.
+
+❓How did you ensure thread safety without locks?
+Instead of concurrent access, I made each worker own its keyspace exclusively. There’s no sharing between threads, so no locks, no contention. This keeps things fast and predictable — like Redis's single-threaded model, just parallelized safely.
+
+❓How does replication or failover work?
+I use replica threads per cachebase, which are dedicated to syncing writes. There's also a replica sentinel thread that watches for failure signals. It’s lightweight and in-process for now, but designed to evolve into a multi-node setup in the future.
+
+❓Why not just go with a database like MongoDB or a multithreaded Redis clone?
+I wanted to learn by building. Pre-made databases are great, but building ReflexCache taught me:
+
+How to manage memory and data structures manually.
+
+How to design for thread safety without locks.
+
+Where trade-offs make or break system performance.
+
+❓What are the trade-offs in your design?
+No deep field indexing like MongoDB — keeps things fast and simple.
+
+Limited to in-memory only right now — no persistent disk store.
+
+Replication is still evolving — but the design supports future clustering.
+
+❓Is ReflexCache as fast as Redis?
+In some workloads, yes — especially when using multi-threaded reads and writes to partitioned keys. ReflexCache’s architecture takes Redis’s insights (cache locality, simplicity, lock-freedom) and adds safe parallelism — so it scales well with cores while staying predictable. Of course, Redis is ultra-optimized in C — but ReflexCache holds its own in Java.
+

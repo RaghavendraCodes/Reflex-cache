@@ -6,6 +6,13 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+import org.example.ReflexApiTest;
+import org.example.serverMain.AuthManager;
+import org.example.ReflexTest;
+import org.example.ReflexApiTest;
+
+import static org.example.ReflexApiTest.runTest;
+
 /**
  * {@code ReflexClient} is a command-line TCP client that connects to a {@link ReflexServer}
  * and allows interactive communication via a REPL-style CLI.
@@ -13,27 +20,6 @@ import java.net.Socket;
  * This client enables users to send commands such as {@code SET}, {@code GET}, {@code DISPLAY}, etc.,
  * and displays responses from the server in real-time.
  * </p>
- *
- * <h2>Features:</h2>
- * <ul>
- *   <li>Interactive REPL-style interface for typing commands</li>
- *   <li>Handles server prompts including identity confirmation and file recovery</li>
- *   <li>Gracefully exits on {@code exit} command</li>
- * </ul>
- *
- * <h2>How it works:</h2>
- * <ol>
- *   <li>Establishes a TCP connection to localhost on port 8080</li>
- *   <li>Handles welcome and identification prompts from the server</li>
- *   <li>Processes user commands and prints multi-line server responses</li>
- * </ol>
- *
- * <p><strong>Note:</strong> This class is intended to be run from a terminal or console-enabled IDE.
- * It complements {@code ReflexServer} and forms the client-side CLI interface of ReflexDB.</p>
- *
- * @author Raghavendra R
- * @version 1.0
- * @since 2025-04-10
  */
 public class ReflexClient {
 
@@ -99,5 +85,61 @@ public class ReflexClient {
         } catch (IOException e) {
             System.out.println("Could not connect to server: " + e.getMessage());
         }
+    }
+
+    public static void main(String[] args) {
+        // Create a scanner for input
+        java.util.Scanner scanner = new java.util.Scanner(System.in);
+
+        // Default port for the client to connect to
+        int port = 8080;
+
+        boolean authenticated = false;
+
+        // Ask the user for the client name
+        System.out.print("Enter your client name: ");
+        String clientName = scanner.nextLine().trim();
+
+        // Handle authentication logic for the client
+        System.out.print("Are you a new user? (yes/no): ");
+        String isNew = scanner.nextLine().trim().toLowerCase();
+
+        System.out.print("Enter your password: ");
+        String password = scanner.nextLine().trim();
+
+        if (isNew.equals("yes")) {
+            // Register new client
+            if (!AuthManager.register(clientName, password)) {
+                System.out.println("Client already exists. Authentication failed.");
+                return;
+            } else {
+                System.out.println("Registered successfully.");
+            }
+        } else {
+            // Authenticate existing client
+            if (!AuthManager.authenticate(clientName, password)) {
+                System.out.println("Authentication failed. Exiting...");
+                return;
+            } else {
+                authenticated = true;
+                System.out.println("Authenticated successfully.");
+            }
+        }
+
+        if (authenticated) {
+            System.out.print("Do you want to run the cachebase test? (yes/no): ");
+            String runTest = scanner.nextLine().trim().toLowerCase();
+
+            if (runTest.equals("yes")) {
+                // ReflexTest.runTest("localhost", port, "testdb");
+                ReflexApiTest.runTest("localhost", port, "testdb", 1000);
+            } else {
+                start(port, clientName);
+            }
+        }
+
+
+        // Start the client after successful authentication
+//        start(port, clientName);
     }
 }

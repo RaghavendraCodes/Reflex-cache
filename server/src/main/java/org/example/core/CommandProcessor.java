@@ -2,8 +2,12 @@ package org.example.core;
 
 import java.io.*;
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+
 import org.example.persistance.FileManager;
+import org.example.core.*;
 
 import static org.example.core.Databases.createDatabase;
 import static org.example.core.Databases.listDatabases;
@@ -80,9 +84,9 @@ public class CommandProcessor {
      */
 
     public static void process(String input, PrintWriter toClient, BufferedReader fromClient,
-                               File aofFile, BufferedWriter logWriter) throws IOException {
+                               File aofFile, BufferedWriter logWriter, String clientName) throws IOException {
 
-        String[] tokens = input.trim().split("\\s+", 3);  // At most 3 parts to capture SET value with spaces
+        String[] tokens = input.trim().split("\\s+", 4);  // At most 3 parts to capture SET value with spaces
         if (tokens.length == 0 || tokens[0].isEmpty()) {
             toClient.println("Error: Empty command.");
             return;
@@ -118,27 +122,74 @@ public class CommandProcessor {
                 }
             }
 
+            // case "SET" -> {
+            //     if (tokens.length < 3) {
+            //         toClient.println("Error: SET requires a key and a value.");
+            //     } else {
+            //         MemoryStore.put(tokens[1], tokens[2]);
+            //         try (BufferedWriter writer = new BufferedWriter(new FileWriter(aofFile, true))) {
+            //             writer.write("SET " + tokens[1] + " " + tokens[2]);
+            //             writer.newLine();
+            //         }
+            //         toClient.println("OK");
+            //     }
+            // }
+
+            // case "GET" -> {
+            //     if (tokens.length < 2) {
+            //         toClient.println("Error: GET requires a key.");
+            //     } else {
+            //         String value = MemoryStore.get(tokens[1]);
+            //         toClient.println(value != null ? value : "(nil)");
+            //     }
+            // }
+
             case "SET" -> {
-                if (tokens.length < 3) {
-                    toClient.println("Error: SET requires a key and a value.");
+                String cachebase, key, value;
+
+                // System.out.println("Tokens: " + Arrays.toString(tokens));
+
+
+                if (tokens.length == 4) {
+                    // Format: SET <cachebase> <key> <value>
+                    cachebase = tokens[1];
+                    key = tokens[2];
+                    value = tokens[3];
                 } else {
-                    MemoryStore.put(tokens[1], tokens[2]);
-                    try (BufferedWriter writer = new BufferedWriter(new FileWriter(aofFile, true))) {
-                        writer.write("SET " + tokens[1] + " " + tokens[2]);
-                        writer.newLine();
-                    }
-                    toClient.println("OK");
+                    toClient.println("Usage: SET <cachebase> <key> <value>");
+                    return;
+                }
+
+                // Get the specified cachebase directly
+                Cachebase cb = CachebaseManager.getCachebase(cachebase);
+                if (cb == null) {
+                    toClient.println("Cachebase not found: " + cachebase);
+                } else {
+                    CompletableFuture<String> result = new CompletableFuture<>();
+                    cb.submit(new CacheCommand(CacheCommand.Type.SET, key, value, result));
+                    toClient.println(result.join());
                 }
             }
 
             case "GET" -> {
-                if (tokens.length < 2) {
-                    toClient.println("Error: GET requires a key.");
+                if (tokens.length < 3) {
+                    toClient.println("Usage: GET <cachebase> <key>");
                 } else {
-                    String value = MemoryStore.get(tokens[1]);
-                    toClient.println(value != null ? value : "(nil)");
+                    String cachebase = tokens[1];
+                    String key = tokens[2];
+
+                    // Get the specified cachebase directly
+                    Cachebase cb = CachebaseManager.getCachebase(cachebase);
+                    if (cb == null) {
+                        toClient.println("Cachebase not found: " + cachebase);
+                    } else {
+                        CompletableFuture<String> result = new CompletableFuture<>();
+                        cb.submit(new CacheCommand(CacheCommand.Type.GET, key, null, result));
+                        toClient.println(result.join());
+                    }
                 }
             }
+
 
             case "DISPLAY" -> {
                 Map<String, String> allData = MemoryStore.getAll();
@@ -174,21 +225,46 @@ public class CommandProcessor {
                 toClient.println("In-memory store and AOF file cleared.");
             }
 
-            case "CREATE" -> {
-                if (tokens.length != 3) {
-                    toClient.println("Usage: CREATE <clientName> <databaseName>");
+            // case "CREATE" -> {
+            //     if (tokens.length != 3 && !tokens[1].equalsIgnoreCase("CACHEBASE")) {
+            //         toClient.println("Usage: CREATE CACHEBASE <databaseName>");
+            //     } else {
+            //         toClient.println(createDatabase(clientName, tokens[2]));
+            //     }
+            // }
+
+            case "LISTDB" -> {
+                if (tokens.length != 1) {
+                    toClient.println("Usage: LISTDB");
                 } else {
-                    toClient.println(createDatabase(tokens[1], tokens[2]));
+                    toClient.println(CachebaseManager.getCachebase(clientName));
                 }
             }
 
-            case "LISTDB" -> {
-                if (tokens.length != 2) {
-                    toClient.println("Usage: LISTDB <clientName>");
+            case "USE" -> {
+                if(tokens.length != 2) {
+                    toClient.println("Usage: USE <CachebaseName>");
                 } else {
-                    toClient.println(listDatabases(tokens[1]));
+                    toClient.println();
                 }
             }
+
+            case "CREATE" -> {
+                if (tokens.length != 3 || !tokens[1].equalsIgnoreCase("CACHEBASE")) {
+                    toClient.println("Usage: CREATE CACHEBASE <name>");
+                } else {
+                    toClient.println(CachebaseManager.createCachebase(tokens[2]));
+                }
+            }
+            
+            case "REMOVE" -> {
+                if (tokens.length != 3 || !tokens[1].equalsIgnoreCase("CACHEBASE")) {
+                    toClient.println("Usage: REMOVE CACHEBASE <name>");
+                } else {
+                    toClient.println(CachebaseManager.removeCachebase(tokens[2]));
+                }
+            }
+            
 
             default -> toClient.println("Unknown command: " + command);
         }

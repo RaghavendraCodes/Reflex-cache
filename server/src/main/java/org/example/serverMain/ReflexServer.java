@@ -19,10 +19,6 @@ import java.net.Socket;
  */
 
 public class ReflexServer {
-    /**
-     * The port on which the ReflexDB server listens for incoming connections.
-     */
-    // private static final int PORT = 8080;
 
     /**
      * Starts the ReflexDB server.
@@ -36,21 +32,26 @@ public class ReflexServer {
      *
      * @throws RuntimeException if the server fails to start due to an {@link IOException}
      */
-
-    public static void start(int port, String clientName) {
+    public static void start(int port) {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("ReflexServer running on port " + port + " for client: " + clientName);
+            System.out.println("ReflexServer running on port " + port);
 
+            // Listen for incoming client connections indefinitely
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("Client connected from: " + clientSocket.getInetAddress());
 
-                // Ensure the clientName is passed to the session handler
-                new Thread(() -> new ClientSessionHandler(clientSocket, clientName).run()).start();
+                // Create and run a new client session handler for each client
+                new Thread(() -> new ClientSessionHandler(clientSocket).run()).start();
             }
 
         } catch (IOException e) {
             System.err.println("Server error: " + e.getMessage());
         }
+    }
+
+    public static void main(String[] args) {
+        int port = 8080; // Default port for server
+        start(port); // Start server on the specified port
     }
 }

@@ -70,6 +70,7 @@ public class FileManager {
      * @param logFile     The log file to preview.
      * @throws IOException If reading from the file or socket fails.
      */
+
     public static void showLogOption(PrintWriter toClient, BufferedReader fromClient, File logFile) throws IOException {
         if (logFile.exists()) {
             toClient.println("Do you want to open the file " + logFile.getName() + "? (yes/no)");
