@@ -1,5 +1,9 @@
 ![reflex-logo](reflex.png)
 
+<div align="center">
+  <img src="reflex.png">
+</div>
+
 # ReflexCache 
 
 reflex-cache is an in-memory key-value store designed for fast access, uses flexible data structures and persistance of data via log files and aof files with a CLI interaction.
